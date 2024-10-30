@@ -1,0 +1,103 @@
+name: EKS Infrastructure Setup
+
+on:
+  workflow_dispatch:
+    inputs:
+      action:
+        description: 'Terraform action to perform'
+        required: true
+        default: 'apply'
+        type: choice
+        options:
+          - init
+          - apply
+          - destroy
+      bucket_name:
+        description: 'Name of the remote state S3 bucket'
+        required: false
+        default: 'terraform-state-remote-bucket'
+
+permissions:
+  contents: read
+  actions: write 
+
+concurrency:
+  group: eks-infra-setup
+  cancel-in-progress: true
+
+env:
+  AWS_REGION: eu-central-1
+
+jobs:
+  setup:
+    name: Setup Environment
+    runs-on: ubuntu-latest
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          python3 -m pip install --upgrade pip awscli
+
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.7.5'
+          terraform_wrapper: false
+
+      - name: Initialize Terraform Backend
+        if: ${{ github.event.inputs.action == 'init'}}
+        run: |
+          chmod +x init-tf-backen.sh
+          ./init-tf-backen.sh -b ${{ github.event.inputs.bucket_name }}
+
+  terraform:
+    name: Run Terraform
+    needs: setup
+    runs-on: ubuntu-latest
+    if: ${{ github.event.inputs.action != 'init' }}
+    env:
+      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Terraform Format Check
+        run: terraform fmt -check
+        continue-on-error: true
+
+      - name: Terraform Init
+        run: terraform init -backend-config="bucket=${{ github.event.inputs.bucket_name }}"
+
+      - name: Terraform Validate
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
+        id: plan
+        run: |
+          if [ "${{ github.event.inputs.action }}" == "apply" ]; then
+            terraform plan -no-color -out=plan.out -detailed-exitcode
+          else
+            terraform plan -destroy -no-color -out=destroy-plan.out
+        continue-on-error: false
+
+      - name: Terraform Apply
+        if: ${{ github.event.inputs.action == 'apply' }}
+        run: terraform apply --auto-approve plan.out
+
+      - name: Terraform Destroy
+        if: ${{ github.event.inputs.action == 'destroy' }}
+        run: |
+          terraform state rm 'module.eks.*' || true
+          terraform destroy -target="module.eks_blueprints_addons" -auto-approve
+          terraform destroy -auto-approve
+
+      - name: Cleanup Terraform Backend
+        if: ${{ github.event.inputs.action == 'destroy' }}
+        run: |
+          chmod +x init-tf-backen.sh
+          ./init-tf-backen.sh -d -b ${{ github.event.inputs.bucket_name }}

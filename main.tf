@@ -1,8 +1,3 @@
-resource "random_string" "suffix" {
-  length  = 5
-  special = false
-}
-
 data "aws_availability_zones" "availibility_zones" {
   filter {
     name   = "opt-in-status"
