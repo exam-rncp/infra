@@ -2,13 +2,36 @@
 
 This project sets up an AWS EKS cluster within a VPC using Terraform modules. 
 
-## Files
-- `main.tf`: Orchestrates the modules for VPC and EKS.
-- `variables.tf`: Defines input variables for flexibility.
-- `outputs.tf`: Exposes output values.
-- `providers.tf`: Configures providers, e.g., AWS.
+## Prerequisites
 
-## Usage
-1. Modify `variables.tf` to fit your AWS setup.
-2. Run `terraform init`.
-3. Apply the changes with `terraform apply`.
+- Terraform >= 0.12
+- AWS CLI configured
+- kubectl installed
+
+## Setup Instructions
+
+1. **Clone the repository:**
+    ```sh
+    git clone https://github.com/yourusername/infra.git
+    cd infra
+    ```
+
+2. **Initialize Terraform:**
+    ```sh
+    terraform init
+    ```
+
+3. **Apply the Terraform configuration:**
+    ```sh
+    terraform apply
+    ```
+
+4. **Configure kubectl to use the new EKS cluster:**
+    ```sh
+    aws eks --region <your-region> update-kubeconfig --name <your-cluster-name>
+    ```
+
+5. **Deploy the Sock-shop application:**
+    ```sh
+    kubectl apply -f sock-shop.yaml
+    ```
