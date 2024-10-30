@@ -19,7 +19,31 @@ variable "project" {
 variable "environment" {
   description = "Environment"
   type        = string
-  default     = "staging"
+  default     = "dev"
+}
+
+variable "vpc_cidr" {
+  description = "CIDR for the VPC"
+  type        = string
+  default     = "10.0.0.0/16"
+}
+
+variable "eks_managed_node_groups" {
+  description = "Managed Node Groups"
+  type = map(object({
+    instance_types = list(string)
+    min_size       = number
+    max_size       = number
+    desired_size   = number
+  }))
+  default = {
+    core_node_group = {
+      instance_types = ["t3a.medium"]
+      min_size       = 1
+      max_size       = 1
+      desired_size   = 1
+    }
+  }
 }
 
 variable "default_tags" {
@@ -27,7 +51,7 @@ variable "default_tags" {
   type        = map(string)
   default = {
     Terraform           = "true"
-    Environment         = "staging"
+    Environment         = "dev"
     Organization        = "exam-rncp"
     GithubBlueprintRepo = "github.com/aws-ia/terraform-aws-eks-blueprints"
   }
