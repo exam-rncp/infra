@@ -53,7 +53,7 @@ jobs:
         if: ${{ github.event.inputs.action == 'init'}}
         run: |
           chmod +x init-tf-backen.sh
-          ./init-tf-backen.sh -b ${{ github.event.inputs.bucket_name }}
+          ./init-tf-backen.sh
 
   terraform:
     name: Run Terraform
