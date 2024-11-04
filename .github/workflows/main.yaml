@@ -70,7 +70,7 @@ jobs:
 
       - name: Set Cloudflare API Token in Configuration Files
         run: |
-          sed -i "s/api_token  = \".*\"/cloudflare_api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" providers.tf
+          sed -i "s/api_token  = \".*\"/api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" providers.tf
           sed -i "s/cloudflare_api_token = \".*\"/cloudflare_api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" dev.tfvars
 
       - name: debug
