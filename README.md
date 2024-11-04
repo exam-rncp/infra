@@ -28,7 +28,7 @@ This project sets up an AWS EKS cluster within a VPC using Terraform modules.
 
 4. **Configure kubectl to use the new EKS cluster:**
     ```sh
-    aws eks --region <your-region> update-kubeconfig --name <your-cluster-name>
+    aws eks --region eu-central-1 update-kubeconfig --name exam-dev
     ```
 
 5. **Deploy the Sock-shop application:**

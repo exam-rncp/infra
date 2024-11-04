@@ -12,18 +12,14 @@ on:
           - init
           - apply
           - destroy
-      bucket_name:
-        description: 'Name of the remote state S3 bucket'
-        required: false
-        default: 'terraform-state-remote-bucket'
       workspace:
-          description: 'Terraform workspace'
-          required: true
-          default: 'dev'
-          type: choice
-          options:
-            - dev
-            - prod
+        description: 'Terraform workspace'
+        required: true
+        default: 'dev'
+        type: choice
+        options:
+          - dev
+          - prod
 
 permissions:
   contents: read
@@ -51,6 +47,13 @@ jobs:
           sudo apt-get update && sudo apt-get install -y jq
           python3 -m pip install --upgrade pip awscli
 
+      - name: Fetch S3 Bucket Name
+        if: ${{ github.event.inputs.action == 'init'}}
+        id: fetch_bucket
+        run: |
+          BUCKET_NAME=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'terraform-state-remote')].Name" --output text)
+          echo "BUCKET_NAME=${BUCKET_NAME}" >> $GITHUB_ENV
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -62,6 +65,8 @@ jobs:
         run: |
           chmod +x init-tf-backen.sh
           ./init-tf-backen.sh
+          BUCKET_NAME=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'terraform-state-remote')].Name" --output text)
+          echo "BUCKET_NAME=${BUCKET_NAME}" >> $GITHUB_ENV
 
   terraform:
     name: Run Terraform
@@ -79,7 +84,7 @@ jobs:
         continue-on-error: true
 
       - name: Terraform Init
-        run: terraform init -backend-config="bucket=${{ github.event.inputs.bucket_name }}"
+        run: terraform init -backend-config="bucket=${{ env.BUCKET_NAME }}"
 
       - name: Terraform Workspace
         run: terraform workspace select ${{ github.event.inputs.workspace }} 
@@ -111,4 +116,4 @@ jobs:
         if: ${{ github.event.inputs.action == 'destroy' }}
         run: |
           chmod +x init-tf-backen.sh
-          ./init-tf-backen.sh -d -b ${{ github.event.inputs.bucket_name }}
+          ./init-tf-backen.sh -d -b ${{ env.BUCKET_NAME }}
