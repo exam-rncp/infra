@@ -1,3 +1,5 @@
+[![EKS Infrastructure Setup](https://github.com/exam-rncp/infra/actions/workflows/main.yaml/badge.svg)](https://github.com/exam-rncp/infra/actions/workflows/main.yaml)
+
 # Infra: Terraform EC2, EKS, VPC and Sock-shop Setup
 
 This project sets up an AWS EKS cluster within a VPC using Terraform modules. 
