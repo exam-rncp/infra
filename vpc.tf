@@ -24,7 +24,5 @@ module "vpc" {
     "kubernetes.io/role/internal-elb" = 1
   }
 
-  tags = {
-    for key, value in var.default_tags : key => value if key != "GithubBlueprintRepo"
-  }
+  tags = local.tags
 }

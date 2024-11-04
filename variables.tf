@@ -4,6 +4,19 @@ variable "region" {
   default     = "eu-central-1"
 }
 
+variable "cloudflare_api_token" {
+  description = "Cloudflare API Token"
+  type        = string
+  default     = "b35_c3-en7SJ7e0P-5xxfDDhGIVZZBYOBUezlrJt"
+
+}
+
+variable "domain_name" {
+  description = "Domain Name"
+  type        = string
+  default     = "monlabo.de"
+}
+
 variable "cluster_name" {
   description = "Name of the Cluster"
   type        = string
@@ -55,4 +68,29 @@ variable "default_tags" {
     Organization        = "exam-rncp"
     GithubBlueprintRepo = "github.com/aws-ia/terraform-aws-eks-blueprints"
   }
+}
+
+variable "repository_names" {
+  description = "List of ECR repository names"
+  type        = list(string)
+  default     = [
+    "front-end",
+    "catalogue",
+    "queue-master",
+    "shipping",
+    "payment",
+    "user",
+    "orders",
+    "user-db"
+  ] # Add your default repo names here
+}
+
+variable "user_identifiers" {
+  type    = list(string)
+  default = ["783764588202"]
+}
+
+variable "user_group" {
+  type    = string
+  default = "DevOps"
 }

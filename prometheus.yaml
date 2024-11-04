@@ -1,0 +1,50 @@
+# https://kubernetes.github.io/ingress-nginx/user-guide/monitoring/#prometheus-and-grafana-installation-using-service-monitors
+# https://fabianlee.org/2022/07/02/prometheus-exposing-prometheus-grafana-as-ingress-for-kube-prometheus-stack/
+alertmanager:
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts: ['alertmanager.app.monlabo.de'] 
+    paths: ['/']
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      nlb.ingress.kubernetes.io/scheme: "internet-facing"
+      nlb.ingress.kubernetes.io/target-type: "ip"
+      nlb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      nlb.ingress.kubernetes.io/ssl-redirect: '443'
+  alertmanagerSpec:
+    externalUrl: https://alertmanager.app.monlabo.de
+    routePrefix: /
+prometheus:
+  prometheusSpec:
+    externalUrl: "https://prometheus.app.monlabo.de/"
+    routePrefix: /
+    podMonitorSelectorNilUsesHelmValues: false
+    serviceMonitorSelectorNilUsesHelmValues: false
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts: ['prometheus.app.monlabo.de']
+    paths: ['/']
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      nlb.ingress.kubernetes.io/scheme: "internet-facing"
+      nlb.ingress.kubernetes.io/target-type: "ip"
+      nlb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      nlb.ingress.kubernetes.io/ssl-redirect: '443'
+grafana:
+  adminPassword: OGpkTa5B0Arr6a
+  ingress:
+    enabled: true
+    ingressClassName: nginx
+    hosts: ['grafana.app.monlabo.de']
+    path: "/"
+    annotations:
+      nginx.ingress.kubernetes.io/ssl-redirect: "true"
+      nginx.ingress.kubernetes.io/ssl-passthrough: "true"
+      nlb.ingress.kubernetes.io/scheme: "internet-facing"
+      nlb.ingress.kubernetes.io/target-type: "ip"
+      nlb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
+      nlb.ingress.kubernetes.io/ssl-redirect: '443'

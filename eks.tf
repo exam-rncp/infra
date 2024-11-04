@@ -1,14 +1,10 @@
-# ################################################################################
-# # EKS Cluster
-# ################################################################################
-
-data "aws_iam_policy" "ebs_csi_policy" {
-  arn = "arn:aws:iam::aws:policy/service-role/AmazonEBSCSIDriverPolicy"
-}
+# # ################################################################################
+# # # EKS Cluster
+# # ################################################################################
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.11"
+  version = "~> 20.26"
 
   cluster_name                   = local.cluster_name
   cluster_version                = "1.31"
@@ -28,4 +24,8 @@ module "eks" {
   eks_managed_node_groups = var.eks_managed_node_groups
 
   tags = var.default_tags
+
+  depends_on = [module.vpc]
+
+
 }

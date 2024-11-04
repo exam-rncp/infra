@@ -2,10 +2,10 @@ environment = "dev"
 
 eks_managed_node_groups = {
   core_node_group = {
-    instance_types = ["t3a.medium"]
+    instance_types = ["t3.medium"]
     min_size       = 1
-    max_size       = 1
-    desired_size   = 1
+    max_size       = 2
+    desired_size   = 2
   }
 }
 
