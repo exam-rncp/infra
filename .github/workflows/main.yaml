@@ -41,17 +41,12 @@ jobs:
       - name: Checkout Code
         uses: actions/checkout@v4
 
-      - name: Configure AWS Credentials
-        uses: aws-actions/configure-aws-credentials@v4
-        with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-          aws-region: ${{ env.AWS_REGION }}
-
-      - name: Install Dependencies
-        run: |
-          sudo apt-get update && sudo apt-get install -y jq
-          python3 -m pip install --upgrade pip awscli
+      # - name: Configure AWS Credentials
+      #   uses: aws-actions/configure-aws-credentials@v4
+      #   with:
+      #     aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+      #     aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+      #     aws-region: ${{ env.AWS_REGION }}
 
       - name: Initialize Terraform S3 Backend
         if: ${{ github.event.inputs.action == 'init' }}
@@ -69,6 +64,11 @@ jobs:
         with:
           terraform_version: '1.7.5'
           terraform_wrapper: false
+
+      - name: Install Dependencies
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          python3 -m pip install --upgrade pip awscli
 
       - name: Configure AWS Credentials
         run: |
