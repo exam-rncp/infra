@@ -23,6 +23,7 @@ on:
 
 permissions:
   contents: read
+  id-token: write
   actions: write 
 
 concurrency:
@@ -33,51 +34,43 @@ env:
   AWS_REGION: eu-central-1
 
 jobs:
-  init:
+  setup:
     name: Setup Environment
     runs-on: ubuntu-latest
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout Code
+        uses: actions/checkout@v4
 
-      - name: Initialize Terraform Backend
-        if: ${{ github.event.inputs.action == 'init'}}
-        run: |
-          chmod +x init-tf-backen.sh
-          ./init-tf-backen.sh
-
-  terraform:
-    name: Run Terraform
-    needs: init
-    runs-on: ubuntu-latest
-    if: ${{ github.event.inputs.action != 'init' }}
-    env:
-      AWS_ACCESS_KEY_ID: ${{ secrets.AWS_ACCESS_KEY_ID }}
-      AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
-    steps:
-      - uses: actions/checkout@v4
-
-      - name: Setup Terraform
-        uses: hashicorp/setup-terraform@v3
+      - name: Configure AWS Credentials
+        uses: aws-actions/configure-aws-credentials@v2
         with:
-          terraform_version: '1.7.5'
-          terraform_wrapper: false
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
 
       - name: Install Dependencies
         run: |
           sudo apt-get update && sudo apt-get install -y jq
           python3 -m pip install --upgrade pip awscli
 
-      - name: Configure AWS Credentials
+      - name: Initialize Terraform S3 Backend
+        if: ${{ github.event.inputs.action == 'init' }}
         run: |
-          mkdir -p ~/.aws
-          echo "[f3linadmin]" >> ~/.aws/credentials
-          echo "aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
-          echo "aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
-          echo "[default]" >> ~/.aws/config
-          echo "region = ${{ env.AWS_REGION }}" >> ~/.aws/config
+          chmod +x init-tf-backen.sh
+          ./init-tf-backen.sh
+
+  terraform:
+    name: Terraform Execution
+    needs: setup
+    runs-on: ubuntu-latest
+    env:
+      AWS_REGION: ${{ env.AWS_REGION }}
+    steps:
+      - name: Setup Terraform
+        uses: hashicorp/setup-terraform@v3
+        with:
+          terraform_version: '1.7.5'
+          terraform_wrapper: false
 
       - name: Fetch S3 Bucket Name
         id: fetch_bucket
@@ -93,53 +86,27 @@ jobs:
         run: |
           sed -i "s/api_token  = \".*\"/api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" providers.tf
           sed -i "s/cloudflare_api_token = \".*\"/cloudflare_api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" dev.tfvars
+          terraform fmt
 
-      - name: debug
+      - name: Initialize Terraform
+        run: terraform init
+
+      - name: Select Terraform Workspace
+        if: ${{ github.event.inputs.action != 'init' }}
+        run: terraform workspace select ${{ github.event.inputs.workspace }}
+
+      - name: Validate Terraform Configuration
+        run: terraform validate -no-color
+
+      - name: Terraform Plan
         run: |
-          echo ### credentials ### 
-          cat ~/.aws/credentials
-          echo ### backend ### 
-          cat backend.tf
-          echo ### providers ### 
-          cat providers.tf
-          echo ### dev.tfvars ### 
-          cat dev.tfvars
+          terraform plan -var-file="${{ github.event.inputs.workspace }}.tfvars" -no-color -out=plan.out
+        continue-on-error: false
 
-      # - name: Terraform Format Check
-      #   run: terraform fmt -check
-      #   continue-on-error: true
+      - name: Apply Terraform Plan
+        if: ${{ github.event.inputs.action == 'apply' }}
+        run: terraform apply -auto-approve plan.out
 
-      # - name: Terraform Init
-      #   run: terraform init
-
-      # - name: Terraform Workspace
-      #   run: terraform workspace select ${{ github.event.inputs.workspace }} 
-
-      # - name: Terraform Validate
-      #   run: terraform validate -no-color
-
-      # - name: Terraform Plan
-      #   id: plan
-      #   run: |
-      #     if [ "${{ github.event.inputs.action }}" == "apply" ]; then
-      #       terraform plan -var-file="${{ github.event.inputs.workspace }}.tfvars" -no-color -out=plan.out -detailed-exitcode
-      #     else
-      #       terraform plan -destroy -var-file="${{ github.event.inputs.workspace }}.tfvars" -no-color -out=destroy-plan.out
-      #   continue-on-error: false
-
-      # - name: Terraform Apply
-      #   if: ${{ github.event.inputs.action == 'apply' }}
-      #   run: terraform apply -var-file="${{ github.event.inputs.workspace }}.tfvars" --auto-approve plan.out
-
-      # - name: Terraform Destroy
-      #   if: ${{ github.event.inputs.action == 'destroy' }}
-      #   run: |
-      #     terraform state rm 'module.eks.*' || true
-      #     terraform destroy -var-file="${{ github.event.inputs.workspace }}.tfvars" -target="module.eks_blueprints_addons" -auto-approve
-      #     terraform destroy -var-file="${{ github.event.inputs.workspace }}.tfvars" -auto-approve
-
-      # - name: Cleanup Terraform Backend
-      #   if: ${{ github.event.inputs.action == 'destroy' }}
-      #   run: |
-      #     chmod +x init-tf-backen.sh
-      #     ./init-tf-backen.sh -d -b ${{ env.BUCKET_NAME }}
+      - name: Destroy Terraform Resources
+        if: ${{ github.event.inputs.action == 'destroy' }}
+        run: terraform destroy -var-file="${{ github.event.inputs.workspace }}.tfvars" -auto-approve
