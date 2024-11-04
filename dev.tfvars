@@ -9,6 +9,8 @@ eks_managed_node_groups = {
   }
 }
 
+cloudflare_api_token = ""
+
 default_tags = {
   Terraform           = "true"
   Environment         = "dev"
