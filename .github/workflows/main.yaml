@@ -91,6 +91,13 @@ jobs:
           sed -i "s/cloudflare_api_token = \".*\"/cloudflare_api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" dev.tfvars
           terraform fmt
 
+      - name: Configure AWS credentials from AWS account
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
       - name: Initialize Terraform
         run: terraform init -upgrade 
  
