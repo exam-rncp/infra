@@ -92,8 +92,8 @@ jobs:
           terraform fmt
 
       - name: Initialize Terraform
-        run: terraform init
-
+        run: terraform init -upgrade 
+ 
       - name: Select Terraform Workspace
         if: ${{ github.event.inputs.action != 'init' }}
         run: terraform workspace select ${{ github.event.inputs.workspace }}
