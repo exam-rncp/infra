@@ -89,7 +89,6 @@ jobs:
           echo "region = ${{ env.AWS_REGION }}" >> ~/.aws/config
 
       - name: Fetch S3 Bucket Name
-        if: ${{ github.event.inputs.action == 'init'}}
         id: fetch_bucket
         run: |
           BUCKET_NAME=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'terraform-state-remote')].Name" --output text)
@@ -103,7 +102,6 @@ jobs:
         run: |
           sed -i "s/api_token  = \".*\"/api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" providers.tf
           sed -i "s/cloudflare_api_token = \".*\"/cloudflare_api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" dev.tfvars
-          terraform format 
 
       - name: debug
         run: |
