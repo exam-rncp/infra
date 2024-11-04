@@ -56,30 +56,6 @@ jobs:
           echo "[default]" >> ~/.aws/config
           echo "region = ${{ env.AWS_REGION }}" >> ~/.aws/config
 
-      - name: Fetch S3 Bucket Name
-        if: ${{ github.event.inputs.action == 'init'}}
-        id: fetch_bucket
-        run: |
-          BUCKET_NAME=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'terraform-state-remote')].Name" --output text)
-          echo "BUCKET_NAME=${BUCKET_NAME}" >> $GITHUB_ENV
-
-
-      - name: Update backend.tf with S3 Bucket Name
-        run: |
-          sed -i "s/^\\s*bucket\\s*=\\s*\".*\"/  bucket = \"${{ env.BUCKET_NAME }}\"/" backend.tf
-
-      - name: Set Cloudflare API Token in Configuration Files
-        run: |
-          sed -i "s/api_token  = \".*\"/api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" providers.tf
-          sed -i "s/cloudflare_api_token = \".*\"/cloudflare_api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" dev.tfvars
-
-      - name: debug
-        run: |
-          cat ~/.aws/credentials
-          cat backend.tf
-          cat providers.tf
-          cat dev.tfvars
-
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -102,6 +78,32 @@ jobs:
       AWS_SECRET_ACCESS_KEY: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
     steps:
       - uses: actions/checkout@v4
+
+      - name: Configure AWS Credentials
+        run: |
+          mkdir -p ~/.aws
+          echo "[f3linadmin]" >> ~/.aws/credentials
+          echo "aws_access_key_id = ${{ secrets.AWS_ACCESS_KEY_ID }}" >> ~/.aws/credentials
+          echo "aws_secret_access_key = ${{ secrets.AWS_SECRET_ACCESS_KEY }}" >> ~/.aws/credentials
+          echo "[default]" >> ~/.aws/config
+          echo "region = ${{ env.AWS_REGION }}" >> ~/.aws/config
+
+      - name: Fetch S3 Bucket Name
+        if: ${{ github.event.inputs.action == 'init'}}
+        id: fetch_bucket
+        run: |
+          BUCKET_NAME=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'terraform-state-remote')].Name" --output text)
+          echo "BUCKET_NAME=${BUCKET_NAME}" >> $GITHUB_ENV
+
+      - name: Update backend.tf with S3 Bucket Name
+        run: |
+          sed -i "s/^\\s*bucket\\s*=\\s*\".*\"/  bucket = \"${{ env.BUCKET_NAME }}\"/" backend.tf
+
+      - name: Set Cloudflare API Token in Configuration Files
+        run: |
+          sed -i "s/api_token  = \".*\"/api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" providers.tf
+          sed -i "s/cloudflare_api_token = \".*\"/cloudflare_api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" dev.tfvars
+          terraform format 
 
       - name: debug
         run: |
