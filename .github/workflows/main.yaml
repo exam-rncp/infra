@@ -47,12 +47,19 @@ jobs:
           sudo apt-get update && sudo apt-get install -y jq
           python3 -m pip install --upgrade pip awscli
 
+      - name: Configure AWS CLI
+        run: |
+          aws configure set aws_access_key_id ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws configure set aws_secret_access_key ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws configure set region ${{ env.AWS_REGION }}
+
       - name: Fetch S3 Bucket Name
         if: ${{ github.event.inputs.action == 'init'}}
         id: fetch_bucket
         run: |
           BUCKET_NAME=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'terraform-state-remote')].Name" --output text)
           echo "BUCKET_NAME=${BUCKET_NAME}" >> $GITHUB_ENV
+
 
       - name: Update backend.tf with S3 Bucket Name
         run: |
