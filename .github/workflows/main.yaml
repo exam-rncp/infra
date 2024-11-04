@@ -54,6 +54,10 @@ jobs:
           BUCKET_NAME=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'terraform-state-remote')].Name" --output text)
           echo "BUCKET_NAME=${BUCKET_NAME}" >> $GITHUB_ENV
 
+      - name: Update backend.tf with S3 Bucket Name
+        run: |
+          sed -i "s/^\\s*bucket\\s*=\\s*\".*\"/  bucket = \"${{ env.BUCKET_NAME }}\"/" backend.tf
+
       - name: Setup Terraform
         uses: hashicorp/setup-terraform@v3
         with:
@@ -65,8 +69,6 @@ jobs:
         run: |
           chmod +x init-tf-backen.sh
           ./init-tf-backen.sh
-          BUCKET_NAME=$(aws s3api list-buckets --query "Buckets[?starts_with(Name, 'terraform-state-remote')].Name" --output text)
-          echo "BUCKET_NAME=${BUCKET_NAME}" >> $GITHUB_ENV
 
   terraform:
     name: Run Terraform
@@ -84,7 +86,7 @@ jobs:
         continue-on-error: true
 
       - name: Terraform Init
-        run: terraform init -backend-config="bucket=${{ env.BUCKET_NAME }}"
+        run: terraform init
 
       - name: Terraform Workspace
         run: terraform workspace select ${{ github.event.inputs.workspace }} 
