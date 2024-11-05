@@ -73,7 +73,7 @@ variable "default_tags" {
 variable "repository_names" {
   description = "List of ECR repository names"
   type        = list(string)
-  default = ["front-end"] # Add your default repo names here
+  default     = ["front-end"] # Add your default repo names here
 }
 
 variable "user_identifiers" {

@@ -12,15 +12,15 @@ eks_managed_node_groups = {
 cloudflare_api_token = ""
 
 repository_names = [
-    "front-end",
-    "catalogue",
-    "catalogue-db",
-    "queue-master",
-    "shipping",
-    "payment",
-    "user",
-    "orders",
-    "user-db"
+  "front-end",
+  "catalogue",
+  "catalogue-db",
+  "queue-master",
+  "shipping",
+  "payment",
+  "user",
+  "orders",
+  "user-db"
 ]
 
 default_tags = {
