@@ -2,8 +2,8 @@
 
 # Variables (replace these with your actual values)
 REPO_NAMES=("front-end" "catalogue" "catalogue-db" "queue-master" "shipping" "payment" "user" "orders" "user-db")
-USER_GROUP="ECRUsers"
-AWS_REGION="your-region"
+USER_GROUP="DevOps"
+AWS_REGION="eu-central-1"
 POLICY_NAME="ECRPushPull"
 POLICY_ARN=""
 
