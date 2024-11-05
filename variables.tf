@@ -7,8 +7,7 @@ variable "region" {
 variable "cloudflare_api_token" {
   description = "Cloudflare API Token"
   type        = string
-  default     = "b35_c3-en7SJ7e0P-5xxfDDhGIVZZBYOBUezlrJt"
-
+  default     = ""
 }
 
 variable "domain_name" {
