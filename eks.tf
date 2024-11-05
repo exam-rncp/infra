@@ -25,7 +25,29 @@ module "eks" {
 
   tags = var.default_tags
 
+  # Attach the ECR access policy to the node IAM role
+  # iam_role_additional_policies = [aws_iam_policy.ecr_access.arn]
+
   depends_on = [module.vpc]
-
-
 }
+
+# resource "aws_iam_policy" "ecr_access" {
+#   name        = "${local.cluster_name}-ecr-access-policy"
+#   description = "Policy for EKS nodes to access Amazon ECR"
+
+#   policy = jsonencode({
+#     Version = "2012-10-17",
+#     Statement = [
+#       {
+#         Effect = "Allow",
+#         Action = [
+#           "ecr:BatchCheckLayerAvailability",
+#           "ecr:BatchGetImage",
+#           "ecr:GetDownloadUrlForLayer",
+#           "ecr:GetAuthorizationToken"
+#         ],
+#         Resource = "*"
+#       }
+#     ]
+#   })
+# }
