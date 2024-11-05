@@ -22,6 +22,7 @@ repository_names = [
     "orders",
     "user-db"
 ]
+
 default_tags = {
   Terraform           = "true"
   Environment         = "dev"
