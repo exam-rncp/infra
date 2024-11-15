@@ -1,5 +1,5 @@
 global:
-  domain: https://argo.app.monlabo.de
+  domain: argocd.monlabo.de
 repoServer:
   resources:
     requests:
@@ -10,31 +10,15 @@ server:
     requests:
       cpu: 100m
       memory: 128Mi
-  config:
-    url: "https://argo.app.monlabo.de"
-  extraArgs:
-    - --insecure    
   ingress:
     enabled: true
     ingressClassName: nginx
     annotations:
       nginx.ingress.kubernetes.io/ssl-passthrough: "true"
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
-    hosts:
-      - argo.app.monlabo.de
+      cert-manager.io/cluster-issuer: "letsencrypt-new-prod"
+    tls: true
 
 configs:
   params:
     server.insecure: true
-
-# redis-ha:
-#   enabled: false
-
-# redis:
-#   enabled: true
-
-# dex:
-#   enabled: false
-
-# notifications:
-#   enabled: false

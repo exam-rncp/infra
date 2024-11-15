@@ -4,7 +4,7 @@ alertmanager:
   ingress:
     enabled: true
     ingressClassName: nginx
-    hosts: ['alertmanager.app.monlabo.de'] 
+    hosts: ['alertmanager.monlabo.de'] 
     paths: ['/']
     annotations:
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -13,6 +13,11 @@ alertmanager:
       nlb.ingress.kubernetes.io/target-type: "ip"
       nlb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
       nlb.ingress.kubernetes.io/ssl-redirect: '443'
+      cert-manager.io/cluster-issuer: "letsencrypt-new-prod"
+    tls:
+      - secretName: alertmanager-prod-tls
+        hosts:
+          - alertmanager.monlabo.de
   alertmanagerSpec:
     externalUrl: https://alertmanager.app.monlabo.de
     routePrefix: /
@@ -25,7 +30,7 @@ prometheus:
   ingress:
     enabled: true
     ingressClassName: nginx
-    hosts: ['prometheus.app.monlabo.de']
+    hosts: ['prometheus.monlabo.de']
     paths: ['/']
     annotations:
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -34,12 +39,18 @@ prometheus:
       nlb.ingress.kubernetes.io/target-type: "ip"
       nlb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
       nlb.ingress.kubernetes.io/ssl-redirect: '443'
+      cert-manager.io/cluster-issuer: "letsencrypt-new-prod"
+    tls:
+      - secretName: prometheus-prod-tls
+        hosts:
+        - prometheus.monlabo.de
+        
 grafana:
   adminPassword: OGpkTa5B0Arr6a
   ingress:
     enabled: true
     ingressClassName: nginx
-    hosts: ['grafana.app.monlabo.de']
+    hosts: ['grafana.monlabo.de']
     path: "/"
     annotations:
       nginx.ingress.kubernetes.io/ssl-redirect: "true"
@@ -48,3 +59,8 @@ grafana:
       nlb.ingress.kubernetes.io/target-type: "ip"
       nlb.ingress.kubernetes.io/listen-ports: '[{"HTTP": 80}, {"HTTPS": 443}]'
       nlb.ingress.kubernetes.io/ssl-redirect: '443'
+      cert-manager.io/cluster-issuer: "letsencrypt-new-prod"
+    tls:
+      - secretName: grafana-prod-tls
+        hosts:
+        - grafana.monlabo.de

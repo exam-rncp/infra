@@ -18,11 +18,6 @@ terraform {
       source  = "hashicorp/kubernetes"
       version = ">= 2.20"
     }
-
-    cloudflare = {
-      source  = "cloudflare/cloudflare"
-      version = ">= 3.4, <=3.32"
-    }
   }
 }
 
@@ -31,10 +26,6 @@ provider "aws" {
   shared_config_files      = ["~/.aws/config"]
   shared_credentials_files = ["~/.aws/credentials"]
   profile                  = "f3linadmin"
-}
-
-provider "cloudflare" {
-  api_token = var.cloudflare_api_token
 }
 
 provider "helm" {

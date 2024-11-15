@@ -1,4 +1,4 @@
-data "aws_availability_zones" "availibility_zones" {
+data "aws_availability_zones" "available" {
   filter {
     name   = "opt-in-status"
     values = ["opt-in-not-required"]
@@ -6,15 +6,15 @@ data "aws_availability_zones" "availibility_zones" {
 }
 
 locals {
-  vpc_name     = "${var.project}-${var.environment}"
-  cluster_name = "${var.cluster_name}-${var.environment}"
-
-  azs = slice(data.aws_availability_zones.availibility_zones.names, 0, 3)
+  cluster_name = "${var.name}-${var.environment}-eks"
+  vpc_name     = "${var.name}-${var.environment}-vpc"
+  vpc_cidr     = var.vpc_cidr
+  azs          = slice(data.aws_availability_zones.available.names, 0, 3)
+  domain_name  = trimsuffix(var.domain_name, ".")
 
   tags = {
-    for key, value in var.default_tags : key => value if key != "GithubBlueprintRepo"
+    Terraform  = "true"
+    GithubRepo = "infra"
+    GithubOrg  = "exam-rncp"
   }
-
-  # Removing trailing dot from domain - just to be sure :)
-  domain_name = trimsuffix(var.domain_name, ".")
 }

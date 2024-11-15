@@ -24,41 +24,6 @@ module "ebs_csi_driver_irsa" {
   depends_on = [module.eks]
 }
 
-module "acm" {
-  source      = "terraform-aws-modules/acm/aws"
-  version     = "~> 4.0"
-  domain_name = local.domain_name
-  zone_id     = data.cloudflare_zone.this.id
-  subject_alternative_names = [
-    "*.app.${local.domain_name}"
-  ]
-  create_route53_records  = false
-  validation_method       = "DNS"
-  wait_for_validation     = true
-  validation_record_fqdns = cloudflare_record.validation[*].hostname
-  tags = merge(local.tags, {
-    Name     = "${var.project}-${var.environment}-backend-validation"
-    Provider = "cloudflare"
-  })
-
-  depends_on = [module.eks, module.vpc]
-}
-
-resource "cloudflare_record" "validation" {
-  count           = length(module.acm.distinct_domain_names)
-  zone_id         = data.cloudflare_zone.this.id
-  name            = element(module.acm.validation_domains, count.index)["resource_record_name"]
-  type            = element(module.acm.validation_domains, count.index)["resource_record_type"]
-  value           = trimsuffix(element(module.acm.validation_domains, count.index)["resource_record_value"], ".")
-  ttl             = 60
-  proxied         = false
-  allow_overwrite = true
-}
-
-data "cloudflare_zone" "this" {
-  name = local.domain_name
-}
-
 module "velero_backup_s3_bucket" {
   source  = "terraform-aws-modules/s3-bucket/aws"
   version = "~> 3.0"
@@ -130,38 +95,26 @@ module "eks_blueprints_addons" {
       most_recent = true
     }
   }
-
-  enable_argocd = true
-  argocd = {
-    name       = "argocd"
-    version    = "7.6.12"
-    repository = "https://argoproj.github.io/argo-helm"
-    namespace  = "argocd"
-    values     = [file("./argocd.yaml")]
-
-    set = [{
-      name  = "server.ingress.annotations.nlb\\.ingress\\.kubernetes\\.io/certificate-arn"
-      value = module.acm.acm_certificate_arn
-      type  = "string"
-    }]
-  }
-
+  
   enable_aws_cloudwatch_metrics = true
-  enable_cluster_autoscaler     = true
-
-  enable_ingress_nginx = true
+  enable_cluster_autoscaler = true
+  enable_ingress_nginx      = true
   ingress_nginx = {
-    name          = "ingress-nginx"
+    name          = "external"
     chart_version = "4.11.3"
     repository    = "https://kubernetes.github.io/ingress-nginx"
+    chart         = "ingress-nginx"
     namespace     = "ingress-nginx"
     values        = [file("./ingress_controller.yaml")]
+  }
 
-    set = [{
-      name  = "controller.service.annotations.service\\.beta\\.kubernetes\\.io/aws-load-balancer-ssl-cert"
-      value = module.acm.acm_certificate_arn
-      type  = "string"
-    }]
+  enable_metrics_server = true
+  metrics_server = {
+    name          = "metrics-server"
+    chart_version = "3.12.0"
+    repository    = "https://kubernetes-sigs.github.io/metrics-server/"
+    namespace     = "kube-system"
+    values        = [file("./metrics_server.yaml")]
   }
 
   enable_kube_prometheus_stack = true
@@ -171,22 +124,6 @@ module "eks_blueprints_addons" {
     repository    = "https://prometheus-community.github.io/helm-charts"
     namespace     = "prometheus"
     values        = [file("./prometheus.yaml")]
-
-    set = [{
-      name  = "alertmanager.ingress.annotations.nlb\\.ingress\\.kubernetes\\.io/certificate-arn"
-      value = module.acm.acm_certificate_arn
-      type  = "string"
-      },
-      {
-        name  = "prometheus.ingress.annotations.nlb\\.ingress\\.kubernetes\\.io/certificate-arn"
-        value = module.acm.acm_certificate_arn
-        type  = "string"
-      },
-      {
-        name  = "grafana.ingress.annotations.nlb\\.ingress\\.kubernetes\\.io/certificate-arn"
-        value = module.acm.acm_certificate_arn
-        type  = "string"
-    }]
   }
 
   enable_velero = true
@@ -204,4 +141,16 @@ module "eks_blueprints_addons" {
   }
 
   depends_on = [module.eks]
+}
+
+resource "helm_release" "argocd" {
+    name       = "argocd"
+    version    = "7.7.2"
+    repository = "https://argoproj.github.io/argo-helm"
+    chart      = "argo-cd"
+    namespace  = "argocd"
+    create_namespace = true
+    values     = [file("./argocd.yaml")]
+
+    depends_on = [module.eks, module.eks_blueprints_addons]
 }

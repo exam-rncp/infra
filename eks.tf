@@ -4,50 +4,39 @@
 
 module "eks" {
   source  = "terraform-aws-modules/eks/aws"
-  version = "~> 20.26"
+  version = "20.12.0"
 
-  cluster_name                   = local.cluster_name
-  cluster_version                = "1.31"
-  cluster_endpoint_public_access = true
+  cluster_name    = local.cluster_name
+  cluster_version = var.kubernetes_version
 
-  # Give the Terraform identity admin access to the cluster
-  # which will allow resources to be deployed into the cluster
+  vpc_id                                   = module.vpc.vpc_id
+  subnet_ids                               = module.vpc.private_subnets
+  cluster_endpoint_public_access           = true
   enable_cluster_creator_admin_permissions = true
 
-  vpc_id     = module.vpc.vpc_id
-  subnet_ids = module.vpc.private_subnets
+  create_cloudwatch_log_group = false
+  cluster_enabled_log_types   = null
 
   eks_managed_node_group_defaults = {
-    ami_type = "AL2023_x86_64_STANDARD"
+    ami_type = "AL2_x86_64"
   }
 
-  eks_managed_node_groups = var.eks_managed_node_groups
+  eks_managed_node_groups = {
+    one = {
+      name = "node-group-1"
 
-  tags = var.default_tags
+      instance_types = ["t3a.large"]
 
-  # Attach the ECR access policy to the node IAM role
-  # iam_role_additional_policies = [aws_iam_policy.ecr_access.arn]
+      min_size     = 1
+      max_size     = 6
+      desired_size = 2
+    }
+  }
 
-  depends_on = [module.vpc]
+  tags = merge(
+    local.tags,
+    {
+      Module = "terraform-aws-modules/eks/aws"
+    }
+  )
 }
-
-# resource "aws_iam_policy" "ecr_access" {
-#   name        = "${local.cluster_name}-ecr-access-policy"
-#   description = "Policy for EKS nodes to access Amazon ECR"
-
-#   policy = jsonencode({
-#     Version = "2012-10-17",
-#     Statement = [
-#       {
-#         Effect = "Allow",
-#         Action = [
-#           "ecr:BatchCheckLayerAvailability",
-#           "ecr:BatchGetImage",
-#           "ecr:GetDownloadUrlForLayer",
-#           "ecr:GetAuthorizationToken"
-#         ],
-#         Resource = "*"
-#       }
-#     ]
-#   })
-# }

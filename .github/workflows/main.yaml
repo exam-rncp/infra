@@ -85,11 +85,11 @@ jobs:
         run: |
           sed -i "s/^\\s*bucket\\s*=\\s*\".*\"/  bucket = \"${{ env.BUCKET_NAME }}\"/" backend.tf
 
-      - name: Set Cloudflare API Token in Configuration Files
-        run: |
-          sed -i "s/api_token  = \".*\"/api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" providers.tf
-          sed -i "s/cloudflare_api_token = \".*\"/cloudflare_api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" dev.tfvars
-          terraform fmt
+      # - name: Set Cloudflare API Token in Configuration Files
+      #   run: |
+      #     sed -i "s/api_token  = \".*\"/api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" providers.tf
+      #     sed -i "s/cloudflare_api_token = \".*\"/cloudflare_api_token = \"${{ secrets.CLOUDFLARE_API_TOKEN }}\"/" dev.tfvars
+      #     terraform fmt
 
       - name: Configure AWS credentials from AWS account
         uses: aws-actions/configure-aws-credentials@v4

@@ -4,6 +4,12 @@ variable "region" {
   default     = "eu-central-1"
 }
 
+variable "kubernetes_version" {
+  description = "kubernetes version"
+  type        = string
+  default     = "1.30"
+}
+
 variable "cloudflare_api_token" {
   description = "Cloudflare API Token"
   type        = string
@@ -16,10 +22,10 @@ variable "domain_name" {
   default     = "monlabo.de"
 }
 
-variable "cluster_name" {
-  description = "Name of the Cluster"
+variable "name" {
+  description = "Name of the Organisation"
   type        = string
-  default     = "exam"
+  default     = "exam-rnpc"
 }
 
 variable "project" {
@@ -35,7 +41,7 @@ variable "environment" {
 }
 
 variable "vpc_cidr" {
-  description = "CIDR for the VPC"
+  description = "default CIDR range of the VPC"
   type        = string
   default     = "10.0.0.0/16"
 }
