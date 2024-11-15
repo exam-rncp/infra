@@ -4,10 +4,10 @@ controller:
     default: false
   metrics:
     enabled: true
-    # serviceMonitor:
-    #   enabled: true
-    #   additionalLabels:
-    #     release: "prometheus"
+    serviceMonitor:
+      enabled: true
+      additionalLabels:
+        release: "prometheus"
   service:
     annotations:
       service.beta.kubernetes.io/aws-load-balancer-cross-zone-load-balancing-enabled: "true"
